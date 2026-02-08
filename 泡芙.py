@@ -202,7 +202,7 @@ def notifyen():
         response = requests.get(url, timeout=5)
         
         if response.status_code == 200:
-            noti = response.text.upper().strip()
+            noti = response.text.strip()
             if len(noti) > 10 and not noti.startswith('<'):
                 mesgdcrt.SectionMessage("通知: " + noti)
                 print()
@@ -330,10 +330,15 @@ def selectnode(mode="sms"):
                 max_limit.update({"sms": 100})
         elif mode == "mail":
             target = get_mail_info()
+        elif mode != "":
+            pass
         else:
-            raise KeyboardInterrupt
+            return
 
-        limit = max_limit[mode]
+        limit = max_limit.get(mode, 0)
+        if limit == 0:
+            return
+            
         while True:
             try:
                 message = ("输入要发送的{type}数量".format(type=mode.upper()) +
@@ -350,7 +355,6 @@ def selectnode(mode="sms"):
                 delay = float(input(
                     mesgdcrt.CommandMessage("输入延迟时间 (单位:秒): "))
                     .strip())
-                # delay = 0
                 max_thread_limit = (count//10) if (count//10) > 0 else 1
                 max_threads = int(input(
                     mesgdcrt.CommandMessage(
@@ -363,7 +367,8 @@ def selectnode(mode="sms"):
                     raise Exception
                 break
             except KeyboardInterrupt as ki:
-                raise ki
+                mesgdcrt.WarningMessage("收到中断信号 - 正在退出...")
+                sys.exit()
             except Exception:
                 mesgdcrt.FailureMessage("请仔细阅读说明！")
                 print()
@@ -426,6 +431,7 @@ if __name__ == "__main__":
     if args.ascii:
         ASCII_MODE = True
         mesgdcrt = MessageDecorator("stat")
+    
     if args.version:
         print("版本: ", __VERSION__)
     elif args.contributors:
@@ -441,22 +447,21 @@ if __name__ == "__main__":
     else:
         choice = ""
         avail_choice = {
-            "1": "短信",
-            "2": "电话",
-            "3": "邮件"
+            "1": "sms",
+            "2": "call",
+            "3": "mail"
         }
         try:
             while (choice not in avail_choice):
                 clr()
                 bann_text()
                 print("可用选项:\n")
-                for key, value in avail_choice.items():
-                    print("[ {key} ] {value} 轰炸".format(key=key,
-                                                          value=value))
+                print("[ 1 ] 短信轰炸")
+                print("[ 2 ] 电话轰炸")
+                print("[ 3 ] 邮件轰炸")
                 print()
                 choice = input(mesgdcrt.CommandMessage("输入选择: "))
-            selectnode(mode=avail_choice[choice].lower())
+            selectnode(mode=avail_choice[choice])
         except KeyboardInterrupt:
             mesgdcrt.WarningMessage("收到中断信号 - 正在退出...")
             sys.exit()
-    sys.exit()
