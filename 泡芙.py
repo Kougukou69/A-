@@ -59,7 +59,7 @@ def bann_text():
 └──┐│││││├──┐├──┤│▒┌┤└─┘││▒┌┤│▒┌┐│┌─┐││▒│││││││┌─┐│┌──┤┌┐┌┘
 │└─┘││││││└─┘├──┤└─┘│┌─┐│└─┘│└─┘││└─┘│└─┘││││││└─┘│└──┤││└┐
 └───┴┘└┘└┴───┘▒▒└───┴┘▒└┴───┴───┘└───┴───┴┘└┘└┴───┴───┴┘└─┘
-作者: AGONI"""
+作者: RAVI SHARMA"""
     if ASCII_MODE:
         logo = ""
     version = "版本: "+__VERSION__
@@ -72,7 +72,7 @@ def bann_text():
     
 def check_intr():
     try:
-        requests.get("https://motherfuckingwebsite.com")
+        requests.get("https://motherfuckingwebsite.com", timeout=5)
     except Exception:
         bann_text()
         mesgdcrt.FailureMessage("检测到网络连接不良")
@@ -170,28 +170,42 @@ def check_for_updates():
             "调试模式已启用！自动更新检查已禁用。")
         return
     mesgdcrt.SectionMessage("正在检查更新")
-    fver = requests.get(
-        "https://raw.githubusercontent.com/ravisharma011/SMSBOMBING/main/.version"
-    ).text.strip()
-    if fver != __VERSION__:
-        mesgdcrt.WarningMessage("有可用的更新")
-        mesgdcrt.GeneralMessage("正在开始更新...")
-        update()
-    else:
-        mesgdcrt.SuccessMessage("SMSBOMBING已是最新版本")
+    try:
+        response = requests.get(
+            "https://raw.githubusercontent.com/ravisharma011/SMSBOMBING/main/.version",
+            timeout=5
+        )
+        if response.status_code == 200:
+            fver = response.text.strip()
+            if fver != __VERSION__:
+                mesgdcrt.WarningMessage("有可用的更新")
+                mesgdcrt.GeneralMessage("正在开始更新...")
+                update()
+            else:
+                mesgdcrt.SuccessMessage("SMSBOMBING已是最新版本")
+                mesgdcrt.GeneralMessage("正在启动SMSBOMBING")
+        else:
+            mesgdcrt.WarningMessage("检查更新失败，继续启动...")
+            mesgdcrt.GeneralMessage("正在启动SMSBOMBING")
+    except Exception as e:
+        mesgdcrt.WarningMessage("检查更新失败，继续启动...")
         mesgdcrt.GeneralMessage("正在启动SMSBOMBING")
 
 
 def notifyen():
     try:
         if DEBUG_MODE:
-            url = "https://github.com/ravisharma011/SMSBOMBING/blob/main/.notify"
+            url = "https://raw.githubusercontent.com/ravisharma011/SMSBOMBING/main/.notify"
         else:
-            url = "https://github.com/ravisharma011/SMSBOMBING/blob/main/.notify"
-        noti = requests.get(url).text.upper()
-        if len(noti) > 10:
-            mesgdcrt.SectionMessage("通知: " + noti)
-            print()
+            url = "https://raw.githubusercontent.com/ravisharma011/SMSBOMBING/main/.notify"
+        
+        response = requests.get(url, timeout=5)
+        
+        if response.status_code == 200:
+            noti = response.text.upper().strip()
+            if len(noti) > 10 and not noti.startswith('<'):
+                mesgdcrt.SectionMessage("通知: " + noti)
+                print()
     except Exception:
         pass
 
@@ -200,7 +214,7 @@ def get_phone_info():
     while True:
         target = ""
         cc = input(mesgdcrt.CommandMessage(
-            "输入你的国家代码 (不含+号中国就输入86): "))
+            "输入你的国家代码 (不含+): "))
         cc = format_phone(cc)
         if not country_codes.get(cc, False):
             mesgdcrt.WarningMessage(
@@ -241,7 +255,7 @@ def pretty_print(cc, target, success, failed):
     mesgdcrt.GeneralMessage("失败       : " + str(failed))
     mesgdcrt.WarningMessage(
         "此工具仅用于娱乐和研究目的")
-    mesgdcrt.SuccessMessage("SMSBOMBING由AGONI创建")
+    mesgdcrt.SuccessMessage("SMSBOMBING由RaviSharma创建")
 
 
 def workernode(mode, cc, target, count, delay, max_threads):
